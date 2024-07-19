@@ -28,6 +28,6 @@ try:
     page = start_browser(serial_number)
     print(f"环境 {serial_number} 已成功启动或接管")
     # 在这里继续使用 page 对象进行后续操作
-    page.get('https://x.com')
+    page.get('https://x.com/lumaoyangmao')
 except Exception as e:
     print(f"错误: {e}")
