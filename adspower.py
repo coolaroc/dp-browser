@@ -24,10 +24,11 @@ def start_browser(serial_number):
 
 # 使用方法
 serial_number = 1  # 环境编号
+
 try:
     page = start_browser(serial_number)
     print(f"环境 {serial_number} 已成功启动或接管")
     # 在这里继续使用 page 对象进行后续操作
-    page.get('https://x.com/lumaoyangmao')
+    page.new_tab(url='https://x.com/lumaoyangmao')
 except Exception as e:
     print(f"错误: {e}")
