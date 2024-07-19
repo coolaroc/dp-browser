@@ -14,15 +14,3 @@
 
 ```bash
 pip install drissionpage requests
-
-adspower示例：
-
-serial_number = 1  # 环境编号
-open_url = f"http://localhost:50325/api/v1/browser/start?serial_number={serial_number}"
-resp = requests.get(open_url, timeout=10).json()
-if resp.get("code") == 0:
-    debug_port = int(resp["data"]["debug_port"])
-    page = ChromiumPage(debug_port)
-    print(f"环境 {serial_number} 已成功启动或接管")
-    page.new_tab(url='https://x.com/lumaoyangmao')
-    # 在这里继续使用 page 对象进行后续操作
