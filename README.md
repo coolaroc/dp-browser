@@ -1,4 +1,4 @@
-# DrissionPage 指纹浏览器接管工具
+# DrissionPage 指纹浏览器接管示例
 
 ![GitHub stars](https://img.shields.io/github/stars/your-username/your-repo-name?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/your-username/your-repo-name?style=social)
