@@ -15,14 +15,14 @@ def save_to_csv(address, seed_phrase_list):
     filename = 'xverse.csv'
     file_exists = os.path.isfile(filename)
 
-    with lock: 
+    with lock:  # 使用锁来防止多个线程同时写入文件时发生冲突
         with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
 
             if not file_exists:
-                writer.writerow(['Address', 'Seed Phrase'])  
+                writer.writerow(['Address', 'Seed Phrase'])  # 写入表头
 
-            
+            # 将助记词列表转换为单个字符串
             seed_phrase = ' '.join(seed_phrase_list)
 
             writer.writerow([address, seed_phrase])
@@ -43,7 +43,7 @@ def create_wallet():
         # 生成助记词
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
-
+        counter = 0
         while True:
             tab = page.get_tab(title='Xverse Wallet')
             if tab:
@@ -63,7 +63,7 @@ def create_wallet():
                     for i in range(12):
                         input_field = tab(f'#input{i}')
                         input_field.input(seed_phrase_list[i])
-                        sleep(0.5) 
+                        sleep(0.5)  # 添加一个短暂的延迟，以确保输入顺利
                     print(f"助记词已输入: {seed_phrase_list}")
 
                 try:
@@ -85,7 +85,11 @@ def create_wallet():
                 except Exception:
                     pass
             sleep(1)
-
+            counter += 1
+            if counter >= 60:
+                page.quit()
+                return False
+        counter = 0
         while True:
             try:
                 page('text=Register').click()
@@ -105,8 +109,13 @@ def create_wallet():
                 sleep(2)
                 break
             sleep(1)
+            counter += 1
+            if counter >= 60:
+                page.quit()
+                return False
 
         page.get('chrome-extension://hmocdlaipfjakhcngkfcpfkmgapbogfo/options.html#/')
+        counter += 0
         while True:
             try:
                 page('t:div@text()=Receive').click()
@@ -126,6 +135,10 @@ def create_wallet():
             except Exception:
                 pass
             sleep(1)
+            counter += 1
+            if counter >= 60:
+                page.quit()
+                return False
 
         save_to_csv(wallet_address, seed_phrase_list)
         return wallet_address, seed_phrase_list
