@@ -44,55 +44,51 @@ def create_wallet():
     page.set.timeouts(0.1)
 
     try:
-
         # 生成助记词
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
-
+        while True: # 通过标签页数量判断弹出钱包
+            if page.tabs_count > 1:
+                page.close_tabs(others=True)
+                page.get('chrome-extension://hmocdlaipfjakhcngkfcpfkmgapbogfo/options.html#/')
+                break
+            sleep(1)
         # 处理创建钱包的循环，最多尝试60次
         for _ in range(60):
-            tab = page.get_tab(title='Xverse Wallet')
-            if tab:
-                try:
-                    tab('text=Restore an existing wallet').click()
-                    sleep(1)
-                except Exception:
-                    pass
+            try:
+                page('text=Restore an existing wallet').click()
+                sleep(1)
+            except Exception:
+                pass
 
-                try:
-                    tab('text=Accept').click()
-                    sleep(1)
-                except Exception:
-                    pass
+            try:
+                page('text=Accept').click()
+                sleep(1)
+            except Exception:
+                pass
 
-                if tab('text=Enter your seedphrase to restore your wallet.'):
-                    for i in range(12):
-                        input_field = tab(f'#input{i}')
-                        input_field.input(seed_phrase_list[i])
-                        sleep(0.5)  # 添加一个短暂的延迟，以确保输入顺利
-                    print(f"助记词已输入: {seed_phrase_list}")
+            if page('text=Enter your seedphrase to restore your wallet.'):
+                for i in range(12):
+                    input_field = page(f'#input{i}')
+                    input_field.input(seed_phrase_list[i])
+                    sleep(0.5)  # 添加一个短暂的延迟，以确保输入顺利
+                print(f"助记词已输入: {seed_phrase_list}")
 
-                try:
-                    tab('text=Continue').click()
-                    sleep(0.5)
-                except Exception:
-                    pass
+            try:
+                page('text=Continue').click()
+                sleep(0.5)
+            except Exception:
+                pass
 
-                try:
-                    tab('@@type=password@@value=').input('Lumaoyangmao\n')  # 钱包密码
-                    sleep(0.5)
-                except Exception:
-                    pass
-                if page.tabs_count > 1:
-                    try:
-                        tab('text=Close this tab').click()
-                        sleep(1)
-                        break
-                    except Exception:
-                        pass
-                else:
-                    break
+            try:
+                page('@@type=password@@value=').input('Lumaoyangmao\n')  # 钱包密码
+                sleep(0.5)
+            except Exception:
+                pass
 
+            if page('text=Close this tab'):
+                sleep(1)
+                break
             sleep(1)
         else:
             page.quit()
