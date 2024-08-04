@@ -44,9 +44,6 @@ def create_wallet():
     page.set.timeouts(0.1)
 
     try:
-        page.get('https://wallet.xverse.app/whitelist')
-        sleep(2)
-
         # 生成助记词
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
@@ -101,7 +98,7 @@ def create_wallet():
         # 处理注册的超时循环
         start_time = time()
         timeout = 60  # 设置超时时间为60秒
-
+        page.get('https://wallet.xverse.app/whitelist')
         while True:
             if time() - start_time > timeout:
                 print("注册过程超时")
