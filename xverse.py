@@ -10,29 +10,36 @@ from mnemonic import Mnemonic
 # 初始化全局锁
 lock = threading.Lock()
 
-
 def save_to_csv(address, seed_phrase_list):
-    filename = 'xverse.csv'
-    file_exists = os.path.isfile(filename)
+    """将地址和助记词保存到 CSV 文件中"""
+    temp_filename = 'xverse_temp.csv'
+    main_filename = 'xverse.csv'
 
     with lock:  # 使用锁来防止多个线程同时写入文件时发生冲突
-        with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
+        with open(temp_filename, 'a', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
-
-            if not file_exists:
-                writer.writerow(['Address', 'Seed Phrase'])  # 写入表头
 
             # 将助记词列表转换为单个字符串
             seed_phrase = ' '.join(seed_phrase_list)
-
             writer.writerow([address, seed_phrase])
 
-    print(f"地址与助记词数据已保存到 {filename}")
+        # 确保将临时文件内容写入主文件
+        if os.path.exists(main_filename):
+            with open(main_filename, 'a', newline='', encoding='utf-8') as mainfile:
+                with open(temp_filename, 'r', newline='', encoding='utf-8') as tempfile:
+                    reader = csv.reader(tempfile)
+                    writer = csv.writer(mainfile)
+                    for row in reader:
+                        writer.writerow(row)
+            os.remove(temp_filename)
+        else:
+            os.rename(temp_filename, main_filename)
 
+    print(f"地址与助记词数据已保存到 {main_filename}")
 
 def create_wallet():
-    chrome_options = ChromiumOptions().auto_port().set_argument('--lang=en').add_extension(
-        r'D:\llq\detail\Xverse-Wallet')
+    """创建钱包并返回钱包地址和助记词列表"""
+    chrome_options = ChromiumOptions().auto_port().set_argument('--lang=en').add_extension(r'D:\llq\detail\Xverse-Wallet')
     page = ChromiumPage(addr_or_opts=chrome_options)
     page.set.timeouts(0.1)
 
@@ -44,8 +51,8 @@ def create_wallet():
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
 
-        counter = 0
-        while True:
+        # 处理创建钱包的循环，最多尝试60次
+        for _ in range(60):
             tab = page.get_tab(title='Xverse Wallet')
             if tab:
                 try:
@@ -87,12 +94,11 @@ def create_wallet():
                     pass
 
             sleep(1)
-            counter += 1
-            if counter >= 60:
-                page.quit()
-                return False
+        else:
+            page.quit()
+            return False
 
-        counter = 0
+        # 处理注册的超时循环
         start_time = time()
         timeout = 60  # 设置超时时间为60秒
 
@@ -121,9 +127,9 @@ def create_wallet():
                 break
             sleep(1)
 
+        # 获取钱包地址
         page.get('chrome-extension://hmocdlaipfjakhcngkfcpfkmgapbogfo/options.html#/')
-        counter = 0
-        while True:
+        for _ in range(60):
             try:
                 page('t:div@text()=Receive').click()
                 page.wait(1)
@@ -142,10 +148,9 @@ def create_wallet():
             except Exception:
                 pass
             sleep(1)
-            counter += 1
-            if counter >= 60:
-                page.quit()
-                return False
+        else:
+            page.quit()
+            return False
 
         save_to_csv(wallet_address, seed_phrase_list)
         return wallet_address, seed_phrase_list
@@ -154,8 +159,8 @@ def create_wallet():
     finally:
         page.quit()
 
-
 def main(iterations, max_workers=4):
+    """主函数，管理多线程执行"""
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(create_wallet) for _ in range(iterations)]
 
@@ -170,7 +175,6 @@ def main(iterations, max_workers=4):
             except Exception as e:
                 print(f"执行第 {i + 1} 个任务时出错: {e}")
             sleep(2)
-
 
 if __name__ == "__main__":
     try:
