@@ -5,6 +5,7 @@ from time import sleep
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pyperclip
 from DrissionPage import ChromiumPage, ChromiumOptions
+from mnemonic import Mnemonic
 
 # 初始化全局锁
 lock = threading.Lock()
@@ -34,111 +35,102 @@ def create_wallet():
     page = ChromiumPage(addr_or_opts=chrome_options)
     page.set.timeouts(0.1)
 
-    page.get('https://wallet.xverse.app/whitelist')
-    sleep(2)
-    tab = page.get_tab(title='Xverse Wallet')
+    try:
+        page.get('https://wallet.xverse.app/whitelist')
+        sleep(2)
+        tab = page.get_tab(title='Xverse Wallet')
 
-    while True:
-        try:
-            tab('text=Create a new wallet').click()
-            sleep(1)
-        except Exception:
-            pass
-        try:
-            tab('text=Accept').click()
-            sleep(1)
-        except Exception:
-            pass
-        try:
-            tab('text=Backup now').click()
-            sleep(1)
-        except Exception:
-            pass
-        try:
-            tab('text=Reveal').click()
-            sleep(2)
-            unique_elements = tab.eles('t:p@translate=no')
-            seed_phrase_list = [element.text for element in unique_elements]
-            if seed_phrase_list:
-                print(seed_phrase_list)
-        except Exception:
-            pass
+        # 生成助记词
+        mnemo = Mnemonic("english")
+        seed_phrase_list = mnemo.generate(strength=128).split()
 
-        try:
-            tab('text=Continue').click()
-            sleep(0.5)
-        except Exception:
-            pass
-
-        mnemonic_index_element = tab('t:span@text():th') or tab('t:span@text():st') or tab('t:span@text():rd') or tab('t:span@text():nd')
-        if mnemonic_index_element:
-            mnemonic_index_text = mnemonic_index_element.text[-2:]
-            mnemonic_index = int(mnemonic_index_element.text.split(mnemonic_index_text)[0])
-            mnemonic_word = seed_phrase_list[mnemonic_index - 1]
+        while True:
             try:
-                tab(f'@value={mnemonic_word}').click()
+                tab('text=Restore an existing wallet').click()
                 sleep(1)
             except Exception:
                 pass
 
-        try:
-            tab('@@type=password@@value=').input('Lumaoyangmao\n')  # 钱包密码
-            sleep(0.5)
-        except Exception:
-            pass
-
-        try:
-            tab('text=Close this tab').click()
-            sleep(1)
-            break
-        except Exception:
-            pass
-        sleep(1)
-
-    while True:
-        try:
-            page('text=Register').click()
-            page.wait(1)
-        except Exception:
-            pass
-
-        tab = page.get_tab(title='Xverse Wallet')
-        if tab:
             try:
-                tab('text=Connect').click()
+                tab('text=Accept').click()
+                sleep(1)
+            except Exception:
+                pass
+
+            if tab('text=Enter your seedphrase to restore your wallet.'):
+                for i in range(12):
+                    input_field = tab(f'#input{i}')
+                    input_field.input(seed_phrase_list[i])
+                    sleep(0.5)  # 添加一个短暂的延迟，以确保输入顺利
+                print(f"助记词已输入: {seed_phrase_list}")
+
+            try:
+                tab('text=Continue').click()
+                sleep(0.5)
+            except Exception:
+                pass
+
+            try:
+                tab('@@type=password@@value=').input('Lumaoyangmao\n')  # 钱包密码
+                sleep(0.5)
+            except Exception:
+                pass
+
+            try:
+                tab('text=Close this tab').click()
+                sleep(1)
+                break
+            except Exception:
+                pass
+            sleep(1)
+
+        while True:
+            try:
+                page('text=Register').click()
                 page.wait(1)
             except Exception:
                 pass
 
-        if page('text=Registration successful'):
-            sleep(2)
-            break
-        sleep(1)
+            tab = page.get_tab(title='Xverse Wallet')
+            if tab:
+                try:
+                    tab('text=Connect').click()
+                    page.wait(1)
+                except Exception:
+                    pass
 
-    page.get('chrome-extension://hmocdlaipfjakhcngkfcpfkmgapbogfo/options.html#/')
-    while True:
-        try:
-            page('t:div@text()=Receive').click()
-            page.wait(1)
-        except Exception:
-            pass
-        try:
-            page('#:copy-address-Ordinals').click()
-            page.wait(1)
-        except Exception:
-            pass
-        try:
-            page('text=I understand').click()
-            page.wait(1)
-            wallet_address = pyperclip.paste()
-            break
-        except Exception:
-            pass
-        sleep(1)
+            if page('text=Registration successful'):
+                sleep(2)
+                break
+            sleep(1)
 
-    save_to_csv(wallet_address, seed_phrase_list)
-    page.quit()  # 关闭浏览器
-    return wallet_address, seed_phrase_list
+        page.get('chrome-extension://hmocdlaipfjakhcngkfcpfkmgapbogfo/options.html#/')
+        while True:
+            try:
+                page('t:div@text()=Receive').click()
+                page.wait(1)
+            except Exception:
+                pass
+            try:
+                page('#:copy-address-Ordinals').click()
+                page.wait(1)
+            except Exception:
+                pass
+            try:
+                page('text=I understand').click()
+                page.wait(1)
+                wallet_address = pyperclip.paste()
+                break
+            except Exception:
+                pass
+            sleep(1)
+
+        save_to_csv(wallet_address, seed_phrase_list)
+        return wallet_address, seed_phrase_list
+    except Exception as e:
+        print(f"发生错误: {e}")
+    finally:
+        page.quit()
 
 
 def main(iterations, max_workers=4):
@@ -155,9 +147,8 @@ def main(iterations, max_workers=4):
 
 
 if __name__ == "__main__":
-    # 获取用户输入的线程数和执行次数
     try:
-        print('钱包密码在85行，默认Lumaoyangmao，浏览器用完即销毁，密码不重要，保存好助记词文件即可。')
+        print('钱包密码在74行，默认Lumaoyangmao，浏览器用完即销毁，密码不重要，保存好助记词文件即可。')
         iterations = int(input("要执行多少次？(输入数字并回车): "))
         max_workers = int(input("要开几个线程？(输入数字并回车): "))
         main(iterations, max_workers)
