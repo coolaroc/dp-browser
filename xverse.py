@@ -38,50 +38,52 @@ def create_wallet():
     try:
         page.get('https://wallet.xverse.app/whitelist')
         sleep(2)
-        tab = page.get_tab(title='Xverse Wallet')
+
 
         # 生成助记词
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
 
         while True:
-            try:
-                tab('text=Restore an existing wallet').click()
-                sleep(1)
-            except Exception:
-                pass
+            tab = page.get_tab(title='Xverse Wallet')
+            if tab:
+                try:
+                    tab('text=Restore an existing wallet').click()
+                    sleep(1)
+                except Exception:
+                    pass
 
-            try:
-                tab('text=Accept').click()
-                sleep(1)
-            except Exception:
-                pass
+                try:
+                    tab('text=Accept').click()
+                    sleep(1)
+                except Exception:
+                    pass
 
-            if tab('text=Enter your seedphrase to restore your wallet.'):
-                for i in range(12):
-                    input_field = tab(f'#input{i}')
-                    input_field.input(seed_phrase_list[i])
-                    sleep(0.5)  # 添加一个短暂的延迟，以确保输入顺利
-                print(f"助记词已输入: {seed_phrase_list}")
+                if tab('text=Enter your seedphrase to restore your wallet.'):
+                    for i in range(12):
+                        input_field = tab(f'#input{i}')
+                        input_field.input(seed_phrase_list[i])
+                        sleep(0.5)  # 添加一个短暂的延迟，以确保输入顺利
+                    print(f"助记词已输入: {seed_phrase_list}")
 
-            try:
-                tab('text=Continue').click()
-                sleep(0.5)
-            except Exception:
-                pass
+                try:
+                    tab('text=Continue').click()
+                    sleep(0.5)
+                except Exception:
+                    pass
 
-            try:
-                tab('@@type=password@@value=').input('Lumaoyangmao\n')  # 钱包密码
-                sleep(0.5)
-            except Exception:
-                pass
+                try:
+                    tab('@@type=password@@value=').input('Lumaoyangmao\n')  # 钱包密码
+                    sleep(0.5)
+                except Exception:
+                    pass
 
-            try:
-                tab('text=Close this tab').click()
-                sleep(1)
-                break
-            except Exception:
-                pass
+                try:
+                    tab('text=Close this tab').click()
+                    sleep(1)
+                    break
+                except Exception:
+                    pass
             sleep(1)
 
         while True:
