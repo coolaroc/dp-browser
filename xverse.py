@@ -44,6 +44,7 @@ def create_wallet():
     page.set.timeouts(0.1)
 
     try:
+
         # 生成助记词
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
@@ -82,13 +83,15 @@ def create_wallet():
                     sleep(0.5)
                 except Exception:
                     pass
-
-                try:
-                    tab('text=Close this tab').click()
-                    sleep(1)
+                if page.tabs_count > 1:
+                    try:
+                        tab('text=Close this tab').click()
+                        sleep(1)
+                        break
+                    except Exception:
+                        pass
+                else:
                     break
-                except Exception:
-                    pass
 
             sleep(1)
         else:
