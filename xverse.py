@@ -177,7 +177,7 @@ def main(iterations, max_workers=4):
 
 if __name__ == "__main__":
     try:
-        print('钱包密码在74行，默认Lumaoyangmao，浏览器用完即销毁，密码不重要，保存好助记词文件即可。')
+        print('钱包密码在87行，默认Lumaoyangmao，浏览器用完即销毁，密码不重要，保存好助记词文件即可。')
         iterations = int(input("要执行多少次？(输入数字并回车): "))
         max_workers = int(input("要开几个线程？(输入数字并回车): "))
         main(iterations, max_workers)
