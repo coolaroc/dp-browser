@@ -1,7 +1,7 @@
 import os
 import csv
 import threading
-from time import sleep
+from time import sleep, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pyperclip
 from DrissionPage import ChromiumPage, ChromiumOptions
@@ -31,7 +31,8 @@ def save_to_csv(address, seed_phrase_list):
 
 
 def create_wallet():
-    chrome_options = ChromiumOptions().auto_port().set_argument('--lang=en').add_extension(r'D:\llq\detail\Xverse-Wallet')
+    chrome_options = ChromiumOptions().auto_port().set_argument('--lang=en').add_extension(
+        r'D:\llq\detail\Xverse-Wallet')
     page = ChromiumPage(addr_or_opts=chrome_options)
     page.set.timeouts(0.1)
 
@@ -39,10 +40,10 @@ def create_wallet():
         page.get('https://wallet.xverse.app/whitelist')
         sleep(2)
 
-
         # 生成助记词
         mnemo = Mnemonic("english")
         seed_phrase_list = mnemo.generate(strength=128).split()
+
         counter = 0
         while True:
             tab = page.get_tab(title='Xverse Wallet')
@@ -84,13 +85,23 @@ def create_wallet():
                     break
                 except Exception:
                     pass
+
             sleep(1)
             counter += 1
             if counter >= 60:
                 page.quit()
                 return False
+
         counter = 0
+        start_time = time()
+        timeout = 60  # 设置超时时间为60秒
+
         while True:
+            if time() - start_time > timeout:
+                print("注册过程超时")
+                page.quit()
+                return False
+
             try:
                 page('text=Register').click()
                 page.wait(1)
@@ -109,13 +120,9 @@ def create_wallet():
                 sleep(2)
                 break
             sleep(1)
-            counter += 1
-            if counter >= 60:
-                page.quit()
-                return False
 
         page.get('chrome-extension://hmocdlaipfjakhcngkfcpfkmgapbogfo/options.html#/')
-        counter += 0
+        counter = 0
         while True:
             try:
                 page('t:div@text()=Receive').click()
@@ -154,8 +161,12 @@ def main(iterations, max_workers=4):
 
         for i, future in enumerate(as_completed(futures)):
             try:
-                address, seed_phrase_list = future.result()
-                print(f"第 {i + 1} 个任务创建成功。钱包地址: {address}")
+                result = future.result()
+                if result:
+                    address, seed_phrase_list = result
+                    print(f"第 {i + 1} 个任务创建成功。钱包地址: {address}")
+                else:
+                    print(f"第 {i + 1} 个任务失败。")
             except Exception as e:
                 print(f"执行第 {i + 1} 个任务时出错: {e}")
             sleep(2)
