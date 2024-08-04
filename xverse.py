@@ -6,24 +6,25 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import pyperclip
 from DrissionPage import ChromiumPage, ChromiumOptions
 from mnemonic import Mnemonic
+import uuid
 
 # 初始化全局锁
 lock = threading.Lock()
 
 def save_to_csv(address, seed_phrase_list):
     """将地址和助记词保存到 CSV 文件中"""
-    temp_filename = 'xverse_temp.csv'
     main_filename = 'xverse.csv'
+    temp_filename = f'xverse_temp_{uuid.uuid4().hex}.csv'  # 使用唯一的临时文件名
 
     with lock:  # 使用锁来防止多个线程同时写入文件时发生冲突
-        with open(temp_filename, 'a', newline='', encoding='utf-8') as csvfile:
+        with open(temp_filename, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
-
             # 将助记词列表转换为单个字符串
             seed_phrase = ' '.join(seed_phrase_list)
             writer.writerow([address, seed_phrase])
 
-        # 确保将临时文件内容写入主文件
+    # 确保将临时文件内容写入主文件
+    with lock:
         if os.path.exists(main_filename):
             with open(main_filename, 'a', newline='', encoding='utf-8') as mainfile:
                 with open(temp_filename, 'r', newline='', encoding='utf-8') as tempfile:
@@ -31,9 +32,11 @@ def save_to_csv(address, seed_phrase_list):
                     writer = csv.writer(mainfile)
                     for row in reader:
                         writer.writerow(row)
-            os.remove(temp_filename)
         else:
             os.rename(temp_filename, main_filename)
+
+    if os.path.exists(temp_filename):
+        os.remove(temp_filename)
 
     print(f"地址与助记词数据已保存到 {main_filename}")
 
