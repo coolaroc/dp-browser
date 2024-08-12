@@ -11,6 +11,7 @@
 
 指纹浏览器注册：
 [推荐]Morelogin注册链接（50个环境免费使用15天）：https://www.morelogin.com/?from=AA5enIPURMdF
+
 ADSPOWER注册链接：https://share.adspower.net/mZS8PGvgfrcr4ik
 
 
