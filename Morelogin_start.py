@@ -66,6 +66,8 @@ def open_browser(debug_port, url):
             co = ChromiumOptions().set_local_port(debug_port)
             page = ChromiumPage(co)
             print(f"浏览器[ {DEFAULT_ENV_ID} ]：接管成功")
+            print('Morelogin注册链接(15天免费50个环境)：https://www.morelogin.com/?from=AA5enIPURMdF')
+            print('如果你使用了我的链接注册，我可以提供共享脚本或技术支持，加我微信：lumaoyangmao')
         except Exception as e:
             print(f"无法打开浏览器页面: {e}")
     else:
