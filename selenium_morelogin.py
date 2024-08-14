@@ -59,10 +59,10 @@ BASEURL = 'http://127.0.0.1:40000'
 
 async def main():
     try:
-        # 环境名称 就是默认P-1那个，
+        # 环境序号，
         uniqueId = 1
         # 环境ID 启动按钮后面三个点，选择复制环境ID
-        # 环境名称和环境ID可只填写一个，两个都填，优先使用环境ID
+        # 环境序号和环境ID可只填写一个，两个都填，优先使用环境ID
         envId = '1823684318728519683'
         debugUrl = await startEnv(envId, uniqueId, APPID, SECRETKEY, BASEURL)
         print(debugUrl)
