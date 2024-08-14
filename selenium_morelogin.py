@@ -109,6 +109,8 @@ def operationEnv(driver):
 
     # 可续写自动化流程
     print('浏览器启动或接管成功')
+    print('Morelogin注册链接(15天免费50个环境)：https://www.morelogin.com/?from=AA5enIPURMdF')
+    print('如果你使用了我的链接注册，我可以提供共享脚本或技术支持，加我微信：lumaoyangmao')
 
 
 if __name__ == '__main__':
